@@ -1,417 +1,604 @@
-import React, { useState } from 'react';
-import { Shield, AlertTriangle, CheckCircle, XCircle, Phone, Mail, MessageSquare, User, Award } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhishGuard AI - Cybersecurity Training</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-export default function PhishGuardAI() {
-  const [currentScreen, setCurrentScreen] = useState('welcome');
-  const [selectedRole, setSelectedRole] = useState('');
-  const [currentScenario, setCurrentScenario] = useState(0);
-  const [score, setScore] = useState(0);
-  const [answeredScenarios, setAnsweredScenarios] = useState([]);
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [lastAnswer, setLastAnswer] = useState(null);
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: white;
+        }
 
-  const scenarios = {
-    general: [
-      {
-        id: 1,
-        type: 'email',
-        title: 'Urgent IT Security Update',
-        description: 'You receive an email that appears to be from IT department:',
-        content: `From: it-security@nexora-support.com
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 60px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            color: #333;
+        }
+
+        h1 {
+            color: #1e3c72;
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #2a5298;
+            font-size: 32px;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #2a5298;
+            padding-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 20px;
+            margin-bottom: 40px;
+        }
+
+        .icon-large {
+            text-align: center;
+            font-size: 80px;
+            margin-bottom: 30px;
+        }
+
+        .role-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .role-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-align: center;
+        }
+
+        .role-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .role-card h3 {
+            font-size: 24px;
+            margin: 20px 0 10px 0;
+            color: white;
+        }
+
+        .scenario-content {
+            background: #f8f9fa;
+            border-left: 4px solid #dc3545;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            color: #333;
+        }
+
+        .options {
+            margin-top: 30px;
+        }
+
+        .option-btn {
+            display: block;
+            width: 100%;
+            background: rgba(42, 82, 152, 0.1);
+            border: 2px solid rgba(42, 82, 152, 0.3);
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .option-btn:hover {
+            background: rgba(42, 82, 152, 0.2);
+            border-color: #2a5298;
+            transform: translateX(5px);
+        }
+
+        .feedback-card {
+            background: white;
+            border-radius: 20px;
+            padding: 60px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .feedback-card.correct {
+            border: 3px solid #28a745;
+        }
+
+        .feedback-card.incorrect {
+            border: 3px solid #dc3545;
+        }
+
+        .feedback-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .feedback-icon {
+            font-size: 60px;
+            margin-right: 20px;
+        }
+
+        .feedback-title {
+            font-size: 36px;
+            color: #333;
+        }
+
+        .explanation-box {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .red-flags {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .red-flags ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .red-flags li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .red-flags li:before {
+            content: "⚠";
+            position: absolute;
+            left: 0;
+            color: #ffc107;
+        }
+
+        .btn {
+            background: #2a5298;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            background: #1e3c72;
+            transform: scale(1.05);
+        }
+
+        .btn-center {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .score-display {
+            text-align: center;
+            font-size: 24px;
+            margin: 20px 0;
+            color: #333;
+        }
+
+        .results-score {
+            text-align: center;
+            font-size: 72px;
+            font-weight: bold;
+            color: #2a5298;
+            margin: 30px 0;
+        }
+
+        .takeaways {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .takeaways ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .takeaways li {
+            padding: 12px 0;
+            padding-left: 35px;
+            position: relative;
+            line-height: 1.6;
+        }
+
+        .takeaways li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-size: 24px;
+        }
+
+        .info-box {
+            background: rgba(42, 82, 152, 0.1);
+            border: 2px solid #2a5298;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .progress {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="screen active">
+            <div class="card">
+                <div class="icon-large">🛡️</div>
+                <h1>PhishGuard AI</h1>
+                <p class="subtitle">Advanced Social Engineering Defense Training</p>
+                <p class="subtitle" style="font-size: 16px; margin-top: 40px;">
+                    In today's threat landscape, AI-powered social engineering attacks are becoming increasingly sophisticated. 
+                    This interactive training will help you recognize and defend against modern attack vectors.
+                </p>
+                
+                <h2 style="margin-top: 40px;">Select Your Role</h2>
+                <div class="role-grid">
+                    <div class="role-card" onclick="startTraining('general')">
+                        <div style="font-size: 50px;">👥</div>
+                        <h3>General Employee</h3>
+                        <p>Email phishing, voice calls, messaging attacks</p>
+                    </div>
+                    <div class="role-card" onclick="startTraining('executive')">
+                        <div style="font-size: 50px;">👔</div>
+                        <h3>Executive</h3>
+                        <p>Spear-phishing, BEC, intelligence gathering</p>
+                    </div>
+                    <div class="role-card" onclick="startTraining('developer')">
+                        <div style="font-size: 50px;">💻</div>
+                        <h3>Developer</h3>
+                        <p>Supply chain, malicious packages, code attacks</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Training Screen -->
+        <div id="training-screen" class="screen">
+            <div class="progress" id="progress"></div>
+            <div class="card">
+                <h2 id="scenario-title"></h2>
+                <p id="scenario-description" style="font-size: 18px; color: #666; margin-bottom: 20px;"></p>
+                <div id="scenario-content" class="scenario-content"></div>
+                <div class="options" id="options"></div>
+            </div>
+        </div>
+
+        <!-- Feedback Screen -->
+        <div id="feedback-screen" class="screen">
+            <div id="feedback-card" class="feedback-card">
+                <div class="feedback-header">
+                    <div class="feedback-icon" id="feedback-icon"></div>
+                    <div class="feedback-title" id="feedback-title"></div>
+                </div>
+                <div class="explanation-box">
+                    <h3 style="color: #333; margin-bottom: 15px;">Explanation:</h3>
+                    <p id="feedback-explanation" style="font-size: 18px; line-height: 1.6; color: #333;"></p>
+                </div>
+                <div class="red-flags">
+                    <h3 style="color: #333; margin-bottom: 15px;">⚠️ Red Flags to Watch For:</h3>
+                    <ul id="red-flags-list"></ul>
+                </div>
+                <div class="btn-center">
+                    <button class="btn" onclick="nextScenario()">Continue to Next Scenario</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="screen">
+            <div class="card">
+                <div class="icon-large">🏆</div>
+                <h1>Training Complete!</h1>
+                <div class="results-score" id="final-score"></div>
+                <p class="score-display" id="score-text"></p>
+                
+                <div class="takeaways">
+                    <h3 style="color: #333; margin-bottom: 20px;">Key Takeaways:</h3>
+                    <ul>
+                        <li>Always verify unusual requests through official channels, not information provided in the suspicious communication</li>
+                        <li>AI voice cloning and deepfakes make it impossible to trust voice or video alone</li>
+                        <li>Urgency and fear are classic social engineering tactics to bypass critical thinking</li>
+                        <li>Report suspicious communications to IT security even if you don't interact with them</li>
+                        <li>Supply chain attacks through compromised packages or vendors are a critical threat vector</li>
+                    </ul>
+                </div>
+
+                <div class="info-box">
+                    <h3 style="color: #2a5298; margin-bottom: 10px;">🛡️ Remember: You are the first line of defense</h3>
+                    <p style="color: #333;">When in doubt, always contact IT Security</p>
+                </div>
+
+                <div class="btn-center">
+                    <button class="btn" onclick="restart()">Start New Training Session</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const scenarios = {
+            general: [
+                {
+                    id: 1,
+                    type: 'email',
+                    title: 'Urgent IT Security Update',
+                    description: 'You receive an email that appears to be from IT department:',
+                    content: `From: it-security@company-support.com
 Subject: URGENT: Security Verification Required
 
 Dear Team Member,
 
 We've detected unusual activity on your account. For your protection, please verify your credentials immediately by clicking the link below within 2 hours to avoid account suspension.
 
-Verify Now: https://nexora-verify.secure-login.com
+Verify Now: https://company-verify.secure-login.com
 
 This is an automated security measure. Do not reply to this email.
 
 Best regards,
-Nexora IT Security Team`,
-        redFlags: [
-          'External domain (nexora-support.com vs official nexora.com)',
-          'Creates urgency and fear (2-hour deadline, account suspension)',
-          'Suspicious link domain (secure-login.com)',
-          'Requests credential verification via link',
-          'Generic greeting ("Team Member")'
-        ],
-        options: [
-          { text: 'Click the link to verify immediately', correct: false, explanation: 'Never click links in unsolicited emails requesting credentials. This is a classic phishing attempt using urgency tactics.' },
-          { text: 'Reply asking if this is legitimate', correct: false, explanation: 'The email says not to reply, and replying confirms your email is active. Better to verify through official channels.' },
-          { text: 'Forward to IT security and verify through official company portal', correct: true, explanation: 'Correct! Always verify suspicious requests through official channels. Contact IT directly using known contact information, not information from the email.' },
-          { text: 'Delete and ignore it', correct: false, explanation: 'While not clicking is good, you should report suspicious emails to IT security so they can alert other employees and investigate.' }
-        ]
-      },
-      {
-        id: 2,
-        type: 'voice',
-        title: 'Executive Voice Call',
-        description: 'You receive a phone call from someone claiming to be the CFO:',
-        content: `Caller: "Hi, this is Sarah Chen, CFO. I'm in a meeting with investors and need you to quickly process an urgent wire transfer. I'll send the details via text message. Can you handle this in the next 30 minutes? This deal is time-sensitive."
+IT Security Team`,
+                    redFlags: [
+                        'External domain (company-support.com vs official company.com)',
+                        'Creates urgency and fear (2-hour deadline, account suspension)',
+                        'Suspicious link domain (secure-login.com)',
+                        'Requests credential verification via link',
+                        'Generic greeting ("Team Member")'
+                    ],
+                    options: [
+                        { text: 'Click the link to verify immediately', correct: false, explanation: 'Never click links in unsolicited emails requesting credentials. This is a classic phishing attempt using urgency tactics.' },
+                        { text: 'Reply asking if this is legitimate', correct: false, explanation: 'The email says not to reply, and replying confirms your email is active. Better to verify through official channels.' },
+                        { text: 'Forward to IT security and verify through official company portal', correct: true, explanation: 'Correct! Always verify suspicious requests through official channels. Contact IT directly using known contact information, not information from the email.' },
+                        { text: 'Delete and ignore it', correct: false, explanation: 'While not clicking is good, you should report suspicious emails to IT security so they can alert other employees and investigate.' }
+                    ]
+                },
+                {
+                    id: 2,
+                    type: 'voice',
+                    title: 'Executive Voice Call',
+                    description: 'You receive a phone call from someone claiming to be the CFO:',
+                    content: `Caller: "Hi, this is Sarah Chen, CFO. I'm in a meeting with investors and need you to quickly process an urgent wire transfer. I'll send the details via text message. Can you handle this in the next 30 minutes? This deal is time-sensitive."
 
 The voice sounds convincing and matches recordings you've heard of the CFO. You receive a text from an unknown number with wire transfer details for $50,000 to a vendor account.`,
-        redFlags: [
-          'Unusual communication method (call + text from unknown number)',
-          'Creates artificial urgency (30 minutes, investors waiting)',
-          'Requests unusual action (immediate wire transfer)',
-          'Bypasses normal approval processes',
-          'AI voice cloning can mimic executives perfectly'
-        ],
-        options: [
-          { text: 'Process the transfer immediately to help the CFO', correct: false, explanation: 'Never process urgent financial transactions based on calls alone. This is likely a vishing (voice phishing) attack using AI voice cloning.' },
-          { text: 'Text back asking for confirmation', correct: false, explanation: 'The text is from an unknown number. AI-driven attacks often use multiple channels to appear legitimate. You need to verify through official channels.' },
-          { text: 'Verify by calling the CFO at their official company number or through verified channels', correct: true, explanation: 'Correct! Always verify unusual requests through known official channels. AI voice cloning makes it impossible to trust voice alone. Use your company directory or verified contact information.' },
-          { text: 'Ask your manager for approval first', correct: false, explanation: 'While checking with your manager is better than acting alone, you should first verify the request actually came from the CFO using official contact methods.' }
-        ]
-      }
-    ],
-    executive: [
-      {
-        id: 3,
-        type: 'message',
-        title: 'LinkedIn Connection Request',
-        description: 'You receive a LinkedIn message:',
-        content: `From: Michael Roberts - Senior Partner at Global Consulting Group
+                    redFlags: [
+                        'Unusual communication method (call + text from unknown number)',
+                        'Creates artificial urgency (30 minutes, investors waiting)',
+                        'Requests unusual action (immediate wire transfer)',
+                        'Bypasses normal approval processes',
+                        'AI voice cloning can mimic executives perfectly'
+                    ],
+                    options: [
+                        { text: 'Process the transfer immediately to help the CFO', correct: false, explanation: 'Never process urgent financial transactions based on calls alone. This is likely a vishing (voice phishing) attack using AI voice cloning.' },
+                        { text: 'Text back asking for confirmation', correct: false, explanation: 'The text is from an unknown number. AI-driven attacks often use multiple channels to appear legitimate. You need to verify through official channels.' },
+                        { text: 'Verify by calling the CFO at their official company number or through verified channels', correct: true, explanation: 'Correct! Always verify unusual requests through known official channels. AI voice cloning makes it impossible to trust voice alone. Use your company directory or verified contact information.' },
+                        { text: 'Ask your manager for approval first', correct: false, explanation: 'While checking with your manager is better than acting alone, you should first verify the request actually came from the CFO using official contact methods.' }
+                    ]
+                }
+            ],
+            executive: [
+                {
+                    id: 3,
+                    type: 'message',
+                    title: 'LinkedIn Connection Request',
+                    description: 'You receive a LinkedIn message:',
+                    content: `From: Michael Roberts - Senior Partner at Global Consulting Group
 
 Hi [Your Name],
 
-I came across your profile and was impressed by your work at Nexora. We're conducting confidential research on the financial services sector and would love to include insights from a leader at your level.
+I came across your profile and was impressed by your work. We're conducting confidential research on the financial services sector and would love to include insights from a leader at your level.
 
 Would you be open to a 15-minute call this week? I'd be happy to share our preliminary findings with you as well. Here's a calendar link to schedule: [link]
 
 Looking forward to connecting!
 Michael`,
-        redFlags: [
-          'Unsolicited outreach flattering your position',
-          'Requests "confidential" discussion',
-          'Uses calendar link instead of official meeting request',
-          'May be reconnaissance for targeted attack',
-          'Profile could be fake or compromised'
-        ],
-        options: [
-          { text: 'Click the calendar link to schedule', correct: false, explanation: 'External calendar links can harvest credentials or install malware. Executives are high-value targets for reconnaissance attacks.' },
-          { text: 'Accept and share preliminary company insights', correct: false, explanation: 'This is likely a social engineering attempt to gather intelligence. Never share company information with unverified external parties, even for "research."' },
-          { text: 'Verify the person and company independently, then route through official channels', correct: true, explanation: 'Correct! Executives are prime targets for spear-phishing and intelligence gathering. Verify identity independently and route any legitimate requests through proper vendor engagement processes.' },
-          { text: 'Decline and block the person', correct: false, explanation: 'While cautious, this may be legitimate. Better to verify independently and route through proper channels if valid, or report to security if suspicious.' }
-        ]
-      }
-    ],
-    developer: [
-      {
-        id: 4,
-        type: 'code',
-        title: 'GitHub Package Dependency',
-        description: 'A colleague recommends a new npm package in Slack:',
-        content: `@DevTeam check out this awesome package I found! Really speeds up API calls:
+                    redFlags: [
+                        'Unsolicited outreach flattering your position',
+                        'Requests "confidential" discussion',
+                        'Uses calendar link instead of official meeting request',
+                        'May be reconnaissance for targeted attack',
+                        'Profile could be fake or compromised'
+                    ],
+                    options: [
+                        { text: 'Click the calendar link to schedule', correct: false, explanation: 'External calendar links can harvest credentials or install malware. Executives are high-value targets for reconnaissance attacks.' },
+                        { text: 'Accept and share preliminary company insights', correct: false, explanation: 'This is likely a social engineering attempt to gather intelligence. Never share company information with unverified external parties, even for "research."' },
+                        { text: 'Verify the person and company independently, then route through official channels', correct: true, explanation: 'Correct! Executives are prime targets for spear-phishing and intelligence gathering. Verify identity independently and route any legitimate requests through proper vendor engagement processes.' },
+                        { text: 'Decline and block the person', correct: false, explanation: 'While cautious, this may be legitimate. Better to verify independently and route through proper channels if valid, or report to security if suspicious.' }
+                    ]
+                }
+            ],
+            developer: [
+                {
+                    id: 4,
+                    type: 'code',
+                    title: 'GitHub Package Dependency',
+                    description: 'A colleague recommends a new npm package in Slack:',
+                    content: `@DevTeam check out this awesome package I found! Really speeds up API calls:
 
-npm install nexora-api-helpers
+npm install company-api-helpers
 
 Super convenient, saves like 100 lines of code. Already using it in my dev environment. 🚀
 
-Package: nexora-api-helpers
+Package: company-api-helpers
 Downloads: 342 this week
 Published: 3 days ago
 No official documentation
 Single contributor`,
-        redFlags: [
-          'Unofficial package mimicking company name',
-          'Very recent publication (3 days old)',
-          'Low download count for "popular" package',
-          'No documentation or official backing',
-          'Supply chain attack vector',
-          'Could contain malicious code or backdoors'
-        ],
-        options: [
-          { text: 'Install it since a colleague recommends it', correct: false, explanation: 'Never install unvetted packages, even with colleague recommendations. This is a classic supply chain attack vector. The package could contain malicious code.' },
-          { text: 'Check the package source code briefly then install', correct: false, explanation: 'Malicious code in packages can be deeply hidden or obfuscated. Brief review is insufficient. All packages must go through security review process.' },
-          { text: 'Report to security team and check if package is on approved vendor list', correct: true, explanation: 'Correct! This shows signs of a supply chain attack - mimicking the company name, recent publication, no documentation. All third-party code must be vetted through security review processes.' },
-          { text: 'Ask for more details about what it does', correct: false, explanation: 'While asking questions is good, the red flags here are serious enough to warrant immediate security team involvement, not just more information.' }
-        ]
-      }
-    ]
-  };
+                    redFlags: [
+                        'Unofficial package mimicking company name',
+                        'Very recent publication (3 days old)',
+                        'Low download count for "popular" package',
+                        'No documentation or official backing',
+                        'Supply chain attack vector',
+                        'Could contain malicious code or backdoors'
+                    ],
+                    options: [
+                        { text: 'Install it since a colleague recommends it', correct: false, explanation: 'Never install unvetted packages, even with colleague recommendations. This is a classic supply chain attack vector. The package could contain malicious code.' },
+                        { text: 'Check the package source code briefly then install', correct: false, explanation: 'Malicious code in packages can be deeply hidden or obfuscated. Brief review is insufficient. All packages must go through security review process.' },
+                        { text: 'Report to security team and check if package is on approved vendor list', correct: true, explanation: 'Correct! This shows signs of a supply chain attack - mimicking the company name, recent publication, no documentation. All third-party code must be vetted through security review processes.' },
+                        { text: 'Ask for more details about what it does', correct: false, explanation: 'While asking questions is good, the red flags here are serious enough to warrant immediate security team involvement, not just more information.' }
+                    ]
+                }
+            ]
+        };
 
-  const handleRoleSelect = (role) => {
-    setSelectedRole(role);
-    setCurrentScreen('training');
-    setCurrentScenario(0);
-    setScore(0);
-    setAnsweredScenarios([]);
-  };
+        let currentRole = '';
+        let currentScenarioIndex = 0;
+        let score = 0;
+        let totalScenarios = 0;
+        let currentScenario = null;
 
-  const handleAnswer = (option, scenario) => {
-    const isCorrect = option.correct;
-    setLastAnswer({ isCorrect, explanation: option.explanation, redFlags: scenario.redFlags });
-    setShowFeedback(true);
-    
-    if (isCorrect) {
-      setScore(score + 1);
-    }
-    
-    setAnsweredScenarios([...answeredScenarios, {
-      scenario: scenario.id,
-      correct: isCorrect
-    }]);
-  };
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
 
-  const handleNext = () => {
-    setShowFeedback(false);
-    const roleScenarios = scenarios[selectedRole] || scenarios.general;
-    
-    if (currentScenario < roleScenarios.length - 1) {
-      setCurrentScenario(currentScenario + 1);
-    } else {
-      setCurrentScreen('results');
-    }
-  };
+        function startTraining(role) {
+            currentRole = role;
+            currentScenarioIndex = 0;
+            score = 0;
+            totalScenarios = scenarios[role].length;
+            showScenario();
+        }
 
-  const getScenarioIcon = (type) => {
-    switch(type) {
-      case 'email': return <Mail className="w-6 h-6" />;
-      case 'voice': return <Phone className="w-6 h-6" />;
-      case 'message': return <MessageSquare className="w-6 h-6" />;
-      case 'code': return <User className="w-6 h-6" />;
-      default: return <AlertTriangle className="w-6 h-6" />;
-    }
-  };
-
-  // Welcome Screen
-  if (currentScreen === 'welcome') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 text-white p-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <div className="flex justify-center mb-6">
-              <Shield className="w-20 h-20 text-blue-300" />
-            </div>
-            <h1 className="text-5xl font-bold mb-4">PhishGuard AI</h1>
-            <p className="text-xl text-blue-200">Advanced Social Engineering Defense Simulator</p>
-          </div>
-
-          <div className="bg-white/10 backdrop-blur-lg rounded-lg p-8 mb-8">
-            <h2 className="text-2xl font-bold mb-4">Welcome to Nexora's Security Training</h2>
-            <p className="text-lg mb-4">
-              In today's threat landscape, AI-powered social engineering attacks are becoming increasingly sophisticated. 
-              This interactive training will help you recognize and defend against modern attack vectors.
-            </p>
-            <div className="grid md:grid-cols-3 gap-4 mt-6">
-              <div className="bg-white/5 p-4 rounded">
-                <AlertTriangle className="w-8 h-8 mb-2 text-yellow-400" />
-                <h3 className="font-bold mb-2">Real Scenarios</h3>
-                <p className="text-sm">Experience realistic attack simulations based on current threats</p>
-              </div>
-              <div className="bg-white/5 p-4 rounded">
-                <CheckCircle className="w-8 h-8 mb-2 text-green-400" />
-                <h3 className="font-bold mb-2">Immediate Feedback</h3>
-                <p className="text-sm">Learn from each decision with detailed explanations</p>
-              </div>
-              <div className="bg-white/5 p-4 rounded">
-                <Award className="w-8 h-8 mb-2 text-purple-400" />
-                <h3 className="font-bold mb-2">Role-Specific</h3>
-                <p className="text-sm">Scenarios tailored to your job responsibilities</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white/10 backdrop-blur-lg rounded-lg p-8">
-            <h2 className="text-2xl font-bold mb-6">Select Your Role</h2>
-            <div className="grid md:grid-cols-3 gap-4">
-              <button
-                onClick={() => handleRoleSelect('general')}
-                className="bg-blue-600 hover:bg-blue-700 p-6 rounded-lg transition text-left"
-              >
-                <User className="w-10 h-10 mb-3" />
-                <h3 className="text-xl font-bold mb-2">General Employee</h3>
-                <p className="text-sm text-blue-200">Email phishing, voice calls, messaging attacks</p>
-              </button>
-              <button
-                onClick={() => handleRoleSelect('executive')}
-                className="bg-purple-600 hover:bg-purple-700 p-6 rounded-lg transition text-left"
-              >
-                <Shield className="w-10 h-10 mb-3" />
-                <h3 className="text-xl font-bold mb-2">Executive</h3>
-                <p className="text-sm text-purple-200">Targeted spear-phishing, impersonation, intelligence gathering</p>
-              </button>
-              <button
-                onClick={() => handleRoleSelect('developer')}
-                className="bg-green-600 hover:bg-green-700 p-6 rounded-lg transition text-left"
-              >
-                <Award className="w-10 h-10 mb-3" />
-                <h3 className="text-xl font-bold mb-2">Developer</h3>
-                <p className="text-sm text-green-200">Supply chain attacks, malicious packages, code injection</p>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Training Screen
-  if (currentScreen === 'training') {
-    const roleScenarios = scenarios[selectedRole] || scenarios.general;
-    const scenario = roleScenarios[currentScenario];
-
-    if (showFeedback) {
-      return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 text-white p-8">
-          <div className="max-w-4xl mx-auto">
-            <div className={`${lastAnswer.isCorrect ? 'bg-green-500/20' : 'bg-red-500/20'} backdrop-blur-lg rounded-lg p-8 border-2 ${lastAnswer.isCorrect ? 'border-green-500' : 'border-red-500'}`}>
-              <div className="flex items-center mb-6">
-                {lastAnswer.isCorrect ? (
-                  <CheckCircle className="w-12 h-12 text-green-400 mr-4" />
-                ) : (
-                  <XCircle className="w-12 h-12 text-red-400 mr-4" />
-                )}
-                <h2 className="text-3xl font-bold">
-                  {lastAnswer.isCorrect ? 'Correct!' : 'Not Quite Right'}
-                </h2>
-              </div>
-
-              <div className="bg-white/10 p-6 rounded-lg mb-6">
-                <h3 className="text-xl font-bold mb-3">Explanation:</h3>
-                <p className="text-lg">{lastAnswer.explanation}</p>
-              </div>
-
-              <div className="bg-white/10 p-6 rounded-lg mb-6">
-                <h3 className="text-xl font-bold mb-3 flex items-center">
-                  <AlertTriangle className="w-6 h-6 mr-2 text-yellow-400" />
-                  Red Flags to Watch For:
-                </h3>
-                <ul className="space-y-2">
-                  {lastAnswer.redFlags.map((flag, idx) => (
-                    <li key={idx} className="flex items-start">
-                      <span className="text-yellow-400 mr-2">•</span>
-                      <span>{flag}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <button
-                onClick={handleNext}
-                className="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-lg font-bold text-lg transition"
-              >
-                Continue to Next Scenario
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 text-white p-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center">
-              <Shield className="w-8 h-8 mr-3 text-blue-300" />
-              <span className="text-xl font-bold">PhishGuard AI</span>
-            </div>
-            <div className="bg-white/10 px-4 py-2 rounded-lg">
-              Scenario {currentScenario + 1} of {roleScenarios.length} | Score: {score}/{answeredScenarios.length}
-            </div>
-          </div>
-
-          <div className="bg-white/10 backdrop-blur-lg rounded-lg p-8 mb-6">
-            <div className="flex items-center mb-4">
-              {getScenarioIcon(scenario.type)}
-              <h2 className="text-2xl font-bold ml-3">{scenario.title}</h2>
-            </div>
-            <p className="text-lg mb-4 text-blue-200">{scenario.description}</p>
+        function showScenario() {
+            const roleScenarios = scenarios[currentRole];
+            currentScenario = roleScenarios[currentScenarioIndex];
             
-            <div className="bg-gray-900/50 p-6 rounded-lg mb-6 font-mono text-sm whitespace-pre-wrap border border-gray-700">
-              {scenario.content}
-            </div>
+            document.getElementById('progress').textContent = 
+                `Scenario ${currentScenarioIndex + 1} of ${totalScenarios} | Score: ${score}/${currentScenarioIndex}`;
+            
+            document.getElementById('scenario-title').textContent = currentScenario.title;
+            document.getElementById('scenario-description').textContent = currentScenario.description;
+            document.getElementById('scenario-content').textContent = currentScenario.content;
+            
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '<h3 style="color: #333; margin-bottom: 20px;">What should you do?</h3>';
+            
+            currentScenario.options.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `<strong>${String.fromCharCode(65 + index)}.</strong> ${option.text}`;
+                btn.onclick = () => handleAnswer(option);
+                optionsDiv.appendChild(btn);
+            });
+            
+            showScreen('training-screen');
+        }
 
-            <h3 className="text-xl font-bold mb-4">What should you do?</h3>
-            <div className="space-y-3">
-              {scenario.options.map((option, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleAnswer(option, scenario)}
-                  className="w-full bg-white/10 hover:bg-white/20 p-4 rounded-lg text-left transition border border-white/20 hover:border-white/40"
-                >
-                  <span className="font-bold mr-2">{String.fromCharCode(65 + idx)}.</span>
-                  {option.text}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+        function handleAnswer(option) {
+            const isCorrect = option.correct;
+            
+            if (isCorrect) {
+                score++;
+                document.getElementById('feedback-card').className = 'feedback-card correct';
+                document.getElementById('feedback-icon').textContent = '✓';
+                document.getElementById('feedback-title').textContent = 'Correct!';
+            } else {
+                document.getElementById('feedback-card').className = 'feedback-card incorrect';
+                document.getElementById('feedback-icon').textContent = '✗';
+                document.getElementById('feedback-title').textContent = 'Not Quite Right';
+            }
+            
+            document.getElementById('feedback-explanation').textContent = option.explanation;
+            
+            const flagsList = document.getElementById('red-flags-list');
+            flagsList.innerHTML = '';
+            currentScenario.redFlags.forEach(flag => {
+                const li = document.createElement('li');
+                li.textContent = flag;
+                flagsList.appendChild(li);
+            });
+            
+            showScreen('feedback-screen');
+        }
 
-  // Results Screen
-  if (currentScreen === 'results') {
-    const roleScenarios = scenarios[selectedRole] || scenarios.general;
-    const percentage = Math.round((score / roleScenarios.length) * 100);
-    
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 text-white p-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <Award className="w-20 h-20 mx-auto mb-4 text-yellow-400" />
-            <h1 className="text-4xl font-bold mb-4">Training Complete!</h1>
-          </div>
+        function nextScenario() {
+            currentScenarioIndex++;
+            const roleScenarios = scenarios[currentRole];
+            
+            if (currentScenarioIndex < roleScenarios.length) {
+                showScenario();
+            } else {
+                showResults();
+            }
+        }
 
-          <div className="bg-white/10 backdrop-blur-lg rounded-lg p-8 mb-6">
-            <div className="text-center mb-8">
-              <div className="text-6xl font-bold mb-2">{percentage}%</div>
-              <p className="text-xl text-blue-200">You got {score} out of {roleScenarios.length} scenarios correct</p>
-            </div>
+        function showResults() {
+            const percentage = Math.round((score / totalScenarios) * 100);
+            document.getElementById('final-score').textContent = percentage + '%';
+            document.getElementById('score-text').textContent = 
+                `You got ${score} out of ${totalScenarios} scenarios correct`;
+            showScreen('results-screen');
+        }
 
-            <div className="bg-white/10 p-6 rounded-lg mb-6">
-              <h3 className="text-xl font-bold mb-4">Key Takeaways:</h3>
-              <ul className="space-y-3">
-                <li className="flex items-start">
-                  <CheckCircle className="w-6 h-6 mr-3 text-green-400 flex-shrink-0 mt-1" />
-                  <span>Always verify unusual requests through official channels, not information provided in the suspicious communication</span>
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="w-6 h-6 mr-3 text-green-400 flex-shrink-0 mt-1" />
-                  <span>AI voice cloning and deepfakes make it impossible to trust voice or video alone</span>
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="w-6 h-6 mr-3 text-green-400 flex-shrink-0 mt-1" />
-                  <span>Urgency and fear are classic social engineering tactics to bypass critical thinking</span>
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="w-6 h-6 mr-3 text-green-400 flex-shrink-0 mt-1" />
-                  <span>Report suspicious communications to IT security even if you don't interact with them</span>
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="w-6 h-6 mr-3 text-green-400 flex-shrink-0 mt-1" />
-                  <span>Supply chain attacks through compromised packages or vendors are a critical threat vector</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="bg-blue-500/20 border border-blue-400 p-6 rounded-lg">
-              <h3 className="text-xl font-bold mb-2 flex items-center">
-                <Shield className="w-6 h-6 mr-2" />
-                Remember: You are Nexora's first line of defense
-              </h3>
-              <p>When in doubt, always contact IT Security at security@nexora.com or extension 5555</p>
-            </div>
-          </div>
-
-          <button
-            onClick={() => {
-              setCurrentScreen('welcome');
-              setScore(0);
-              setAnsweredScenarios([]);
-              setSelectedRole('');
-            }}
-            className="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-lg font-bold text-lg transition"
-          >
-            Start New Training Session
-          </button>
-        </div>
-      </div>
-    );
-  }
-}
+        function restart() {
+            showScreen('welcome-screen');
+        }
+    </script>
+</body>
+</html>
